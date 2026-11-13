@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart":       [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "UserPromptSubmit":   [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "PreToolUse":         [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "PermissionRequest":  [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "PermissionDenied":   [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "PostToolUse":        [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "PostToolUseFailure": [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "Notification":       [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "SubagentStart":      [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "SubagentStop":       [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "Stop":               [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "StopFailure":        [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }],
+    "SessionEnd":         [{ "hooks": [{ "type": "command", "command": "$HOME/agent-world/hooks/emit.sh", "async": true }] }]
+  }
+}

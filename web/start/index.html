@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent World: your Claude Code sessions as a pack of wild boars</title>
+<meta name="description" content="A live pixel-art map of your Claude Code sessions: each session is a wild boar, each tool a feeding spot, a request for permission a boar waiting at your camp. Hosted for free or self-hosted, MIT.">
+<link rel="canonical" href="https://dziki.doner.cloud/start/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Your Claude Code sessions as a pack of wild boars">
+<meta property="og:description" content="A live pixel-art map of Claude Code sessions: who is working, which tool, who waits for your OK. Free, open source.">
+<meta property="og:url" content="https://dziki.doner.cloud/start/">
+<meta property="og:image" content="https://dziki.doner.cloud/start/map.png">
+<meta property="og:image:width" content="1028">
+<meta property="og:image:height" content="580">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+/* A page in front of the login: what Agent World is, how to try it, how to host it. No scripts, no outside requests */
+:root { color-scheme: dark; --bg: #10170f; --panel: #1a2418; --line: #2e3d2a; --text: #eef2e6; --muted: #b5c0a8; --accent: #e9b949; --green: #8bc34a; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 1.0625rem/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 66rem; margin: 0 auto; padding-block: 2rem 3rem; display: grid; gap: 2.5rem; }
+h1 { font-size: clamp(2rem, 5.5vw, 3.2rem); line-height: 1.08; margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+h2 { font-size: 1.5rem; margin: 0 0 .75rem; }
+p { margin: 0; }
+.kicker { font: 700 .8rem/1 ui-monospace, Menlo, Consolas, monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.lead { color: var(--muted); font-size: 1.2rem; max-width: 44rem; }
+header { display: grid; gap: 1rem; }
+.map { margin: 0; border-radius: 14px; overflow: hidden; border: 3px solid #000; box-shadow: 0 1.5rem 4rem #000a; }
+.map img { display: block; width: 100%; height: auto; image-rendering: pixelated; }
+.map figcaption { background: var(--panel); color: var(--muted); font-size: .9rem; padding: .6rem 1rem; }
+.actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.button { display: inline-flex; align-items: center; min-height: 3rem; padding: .7rem 1.3rem; border-radius: 999px; font-weight: 700; text-decoration: none; border: 2px solid var(--line); color: var(--text); background: var(--panel); }
+.button.primary { background: var(--accent); color: #241a00; border-color: var(--accent); }
+.button:focus-visible, a:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; }
+.grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1.1rem 1.2rem; display: grid; gap: .35rem; align-content: start; }
+.card b { font-size: 1.05rem; }
+.card span { color: var(--muted); font-size: .97rem; }
+ol.steps { margin: 0; padding-left: 1.3rem; display: grid; gap: .6rem; max-width: 46rem; }
+ol.steps li::marker { color: var(--accent); font-weight: 700; }
+code, pre { font: .92rem/1.5 ui-monospace, Menlo, Consolas, monospace; }
+pre { background: #0a0f09; border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem; overflow-x: auto; margin: .5rem 0 0; }
+.muted { color: var(--muted); }
+ul.plain { margin: 0; padding-left: 1.2rem; display: grid; gap: .4rem; color: var(--muted); max-width: 46rem; }
+a { color: var(--accent); }
+section.pl { border-top: 1px solid var(--line); padding-top: 2rem; }
+footer { color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Agent World · for Claude Code</p>
+    <h1>Your Claude Code sessions as a pack of wild boars</h1>
+    <p class="lead">A live pixel-art map of everything your agents do. Each session is a boar, each subagent a piglet, each tool a feeding spot. When Claude needs your permission, its boar comes to your camp with a red “!”, so you see at a glance who works and who waits.</p>
+    <div class="actions">
+      <a class="button primary" href="/">Try it free (log in with an email code)</a>
+      <a class="button" href="https://github.com/adahyto/agent-world">Source code on GitHub</a>
+    </div>
+  </header>
+
+  <figure class="map">
+    <img src="/start/map.png" width="1028" height="580" alt="Pixel-art map: a forest with dens named after projects (urlhub, kosmos, przodkowie, zodiak, agent-world), boars on a meadow by a pond, one at the druid's camp, speech bubbles over working boars, a road and a village at the bottom.">
+    <figcaption>Five sessions in autumn: two boars feeding (thinking and reading files), one at the camp waiting for an answer. Seasons and the time of day follow the clock.</figcaption>
+  </figure>
+
+  <section>
+    <h2>What you see</h2>
+    <div class="grid">
+      <div class="card"><b>Every session, live</b><span>A boar per Claude Code session, named after its project, with a den in the forest. Subagents follow as piglets.</span></div>
+      <div class="card"><b>What it is doing</b><span>Thinking, reading, editing, running a command, searching the web: each tool has its own spot on the map, with a bubble over the boar.</span></div>
+      <div class="card"><b>Who waits for you</b><span>A request for permission or an idle session brings the boar to your camp. Click it for its timeline and, if you chose to send them, the prompt and the last reply.</span></div>
+      <div class="card"><b>Several computers</b><span>Connect a laptop, a server and a VPS with one line each; all their sessions land on one map.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Try it in two minutes</h2>
+    <ol class="steps">
+      <li>Open <a href="/">dziki.doner.cloud</a> and log in with your email: you get a one-time code, no password and no account to set up.</li>
+      <li>Click “podłącz komputer” (connect a computer) and choose what to send: <b>status</b> (states and tool names only) or <b>full</b> (also the prompt, the reply and a short tool detail).</li>
+      <li>Paste the line it gives you into a terminal on the computer where you run Claude Code. It adds hooks to <code>~/.claude/settings.json</code>; the same script with <code>--usun</code> removes them.</li>
+      <li>Start Claude Code as usual. Your boars appear within a second.</li>
+    </ol>
+    <p class="muted" style="margin-top:.75rem">The hosted version is a free guest account for 24 hours: then its tokens, sessions and history are deleted. Everyone sees only their own sessions. The interface is in Polish for now. <a href="https://doner.cloud/prywatnosc/#dziki">Privacy: what is kept and for how long</a>.</p>
+  </section>
+
+  <section>
+    <h2>Host it yourself</h2>
+    <p class="muted">Node and <code>curl</code>, nothing else: a collector that takes Claude Code's hook events and serves the map, and a hook script. MIT licence.</p>
+<pre>git clone https://github.com/adahyto/agent-world ~/agent-world
+node ~/agent-world/collector/server.js     # listens on 127.0.0.1:7777
+# add the hooks from hooks/settings.hooks.json to ~/.claude/settings.json, then:
+ssh -L 7777:127.0.0.1:7777 you@your-server  # open http://localhost:7777</pre>
+    <ul class="plain" style="margin-top:1rem">
+      <li>Events can contain prompts and parts of replies: do not expose the collector without authentication. The hosted version sits behind Cloudflare Access.</li>
+      <li>No raw event log by default; the state of the map is kept in <code>~/.agent-world/state.json</code>.</li>
+    </ul>
+  </section>
+
+  <section class="pl" lang="pl">
+    <h2>Po polsku</h2>
+    <p class="muted">Agent World pokazuje sesje Claude Code jako dziki na pixelowej mapie: każda sesja to dzik z barłogiem swojego projektu, subagenci to warchlaki, narzędzia to miejsca żerowania, a dzik czekający na Twoją zgodę przychodzi do ogniska. Zaloguj się na <a href="/">dziki.doner.cloud</a> kodem z e-maila (konto gościa na 24 godziny), podłącz komputer jedną linią i uruchom Claude Code jak zwykle. Kod jest otwarty na licencji MIT.</p>
+  </section>
+
+  <footer>Agent World is made by <a href="https://doner.cloud/">doner.cloud</a>: small free services with no ads and no tracking. Not affiliated with Anthropic.</footer>
+</main>
+</body>
+</html>

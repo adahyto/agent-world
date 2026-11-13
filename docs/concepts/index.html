@@ -1,0 +1,158 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watacha dzików</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one column, the pixel stage is the hero; controls and legend sit under it like a game's side manual. */
+  :root {
+    --bg: #eceef3; --surface: #ffffff; --fg: #141923; --muted: #586276; --line: #d3d8e2; --accent: #2f55d4;
+    --st-idle: #3f9d5b; --st-think: #7a8a1e; --st-tool: #c27a0e; --st-perm: #d6302a; --st-q: #b58a00; --st-in: #2f8a6a; --st-done: #8a919e; --st-err: #9c2a6b;
+    --display: "Pixelify Sans", ui-monospace, "Courier New", monospace;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1017; --surface: #151a24; --fg: #e5e9f1; --muted: #8e98ac; --line: #262d3b; --accent: #86a2ff;
+      --st-idle: #6fd38c; --st-think: #c9d66a; --st-tool: #ffb648; --st-perm: #ff5a52; --st-q: #ffd23f; --st-in: #6fe0b5; --st-done: #8a919e; --st-err: #e070b0;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1017; --surface: #151a24; --fg: #e5e9f1; --muted: #8e98ac; --line: #262d3b; --accent: #86a2ff;
+    --st-idle: #6fd38c; --st-think: #c9d66a; --st-tool: #ffb648; --st-perm: #ff5a52; --st-q: #ffd23f; --st-in: #6fe0b5; --st-done: #8a919e; --st-err: #e070b0;
+    color-scheme: dark;
+  }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--body); }
+  .wrap { max-width: 1040px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 48px; display: grid; gap: 18px; }
+  header { display: grid; gap: 6px; }
+  .eyebrow { font: 500 12px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font: 700 clamp(26px, 4.4vw, 40px)/1.05 var(--display); margin: 0; text-wrap: balance; }
+  header p { margin: 0; max-width: 68ch; color: var(--muted); }
+  #tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  #tabs button {
+    font: 500 15px/1 var(--display); padding: 9px 14px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); color: var(--fg);
+  }
+  #tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .scene { display: grid; gap: 4px; }
+  .scene h2 { font: 700 22px/1.2 var(--display); margin: 0; }
+  .scene p { margin: 0; color: var(--muted); max-width: 72ch; }
+  .stage-frame { background: #05070c; border-radius: 6px; padding: 6px; box-shadow: 0 0 0 1px var(--line); }
+  #stage { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; border-radius: 3px; }
+  #controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 12px 14px; }
+  .who { font: 500 13px/1.3 var(--mono); color: var(--muted); min-width: 0; }
+  .who b { color: var(--fg); font-weight: 600; }
+  .grp { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .grp > span { font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 2px; }
+  .grp button {
+    font: 500 12px/1 var(--mono); padding: 7px 9px; border-radius: 3px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--bg); color: var(--fg); border-left: 3px solid var(--c, var(--line));
+  }
+  .grp button:hover { border-color: var(--fg); }
+  .grp select { font: 500 12px/1 var(--mono); padding: 6px 8px; border-radius: 3px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+  button:focus-visible, #stage:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .toggles { display: flex; gap: 14px; font-size: 13px; color: var(--muted); margin-left: auto; }
+  .toggles label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+  #chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: grid; grid-template-columns: auto 1fr; column-gap: 7px; align-items: center; text-align: left;
+    font: 500 13px/1.25 var(--mono); padding: 6px 10px 6px 8px; border-radius: 4px; cursor: pointer;
+    border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-left: 4px solid var(--sc, var(--line));
+  }
+  .chip i { width: 8px; height: 8px; grid-row: span 2; }
+  .chip small { grid-column: 2; font-size: 11px; color: var(--sc, var(--muted)); }
+  .chip.is-sel { box-shadow: 0 0 0 2px var(--accent); }
+  .st-idle { --sc: var(--st-idle); } .st-thinking { --sc: var(--st-think); } .st-tool { --sc: var(--st-tool); }
+  .st-w-permission { --sc: var(--st-perm); } .st-w-question { --sc: var(--st-q); } .st-w-input { --sc: var(--st-in); }
+  .st-done { --sc: var(--st-done); } .st-error { --sc: var(--st-err); }
+  #legend { display: grid; gap: 14px; }
+  .lead { margin: 0; max-width: 72ch; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px 28px; }
+  .cols section { min-width: 0; }
+  #legend h3 { font: 700 15px/1.2 var(--display); margin: 6px 0 8px; letter-spacing: .02em; }
+  #legend table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  #legend th { text-align: left; vertical-align: top; font: 500 12px/1.5 var(--mono); color: var(--muted); padding: 6px 12px 6px 0; white-space: nowrap; width: 1%; }
+  #legend td { padding: 5px 0; border-bottom: 1px solid var(--line); }
+  #legend tr:first-child td { border-top: 1px solid var(--line); }
+  #legend th { border-bottom: 1px solid var(--line); }
+  #legend tr:first-child th { border-top: 1px solid var(--line); }
+  .pc { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+  .pc li { padding-left: 22px; position: relative; }
+  .pc li::before { position: absolute; left: 0; top: 0; font: 700 14px/1.5 var(--mono); }
+  .pc .pro::before { content: "+"; color: var(--st-idle); }
+  .pc .con::before { content: "−"; color: var(--st-perm); }
+  footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 12px; max-width: 80ch; }
+  @media (max-width: 560px) { .toggles { margin-left: 0; } #legend th { white-space: normal; width: 34%; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Agent World · makieta z symulacją</p>
+    <h1>Watacha dzików</h1>
+    <p>Las, polana i przedmieścia. Każda sesja Claude Code to dzik z watahy, każde narzędzie ma swoje miejsce żerowania, a Ty jesteś druidem przy ognisku na skraju lasu. Pora roku i dnia zmieniają się same według kalendarza i zegara (do nadpisania poniżej). Pięć symulowanych sesji (nazwy Twoich projektów) i ich warchlaki chodzą po mapie według statusów z collectora. Kliknij dzika albo kafelek na dole i wymuś dowolny stan przyciskami.</p>
+  </header>
+
+  <nav id="tabs" role="tablist" aria-label="Koncepcje"></nav>
+
+  <div class="scene">
+    <h2 id="concept-name"></h2>
+    <p id="concept-tag"></p>
+  </div>
+
+  <div class="stage-frame"><canvas id="stage" width="640" height="360" aria-label="Animowana mapa świata agentów"></canvas></div>
+
+  <div id="controls">
+    <div class="who">Wybrany: <b id="sel-name">—</b></div>
+    <div class="grp"><span>Stan</span>
+      <button type="button" data-status="idle" style="--c: var(--st-idle)">idle</button>
+      <button type="button" data-status="thinking" style="--c: var(--st-think)">thinking</button>
+    </div>
+    <div class="grp"><span>Narzędzie</span>
+      <button type="button" data-status="tool" data-tool="Bash" style="--c: var(--st-tool)">Bash</button>
+      <button type="button" data-status="tool" data-tool="Read" style="--c: var(--st-tool)">Read</button>
+      <button type="button" data-status="tool" data-tool="Grep" style="--c: var(--st-tool)">Grep</button>
+      <button type="button" data-status="tool" data-tool="Edit" style="--c: var(--st-tool)">Edit</button>
+      <button type="button" data-status="tool" data-tool="Write" style="--c: var(--st-tool)">Write</button>
+      <button type="button" data-status="tool" data-tool="WebSearch" style="--c: var(--st-tool)">WebSearch</button>
+      <button type="button" data-status="tool" data-tool="WebFetch" style="--c: var(--st-tool)">WebFetch</button>
+      <button type="button" data-status="tool" data-tool="TodoWrite" style="--c: var(--st-tool)">TodoWrite</button>
+      <button type="button" data-status="tool" data-tool="MCP" style="--c: var(--st-tool)">MCP</button>
+      <button type="button" data-status="tool" data-tool="Agent" style="--c: var(--st-tool)">Agent</button>
+    </div>
+    <div class="grp"><span>Czeka</span>
+      <button type="button" data-status="waiting_for_user" data-wait="permission" style="--c: var(--st-perm)">pozwolenie</button>
+      <button type="button" data-status="waiting_for_user" data-wait="question" style="--c: var(--st-q)">pytanie</button>
+      <button type="button" data-status="waiting_for_user" data-wait="input" style="--c: var(--st-in)">bezczynność</button>
+    </div>
+    <div class="grp"><span>Koniec</span>
+      <button type="button" data-status="done" style="--c: var(--st-done)">done</button>
+      <button type="button" data-status="error" style="--c: var(--st-err)">error</button>
+    </div>
+    <div class="grp"><span>Pora</span>
+      <select id="season" aria-label="Pora roku"><option value="auto">pora roku: auto</option><option value="wiosna">wiosna</option><option value="lato">lato</option><option value="jesien">jesień</option><option value="zima">zima</option></select>
+      <select id="daytime" aria-label="Pora dnia"><option value="auto">pora dnia: auto</option><option value="dzien">dzień</option><option value="noc">noc</option></select>
+    </div>
+    <div class="toggles">
+      <label><input type="checkbox" id="auto" checked> symulacja</label>
+      <label><input type="checkbox" id="labels" checked> podpisy narzędzi</label>
+    </div>
+  </div>
+
+  <div id="chips" aria-label="Agenci"></div>
+
+  <div id="legend"></div>
+
+  <footer>To makieta do rozmowy, nie gotowy interfejs. Dane są symulowane, a sprite'y narysowane w kodzie, bez zewnętrznych grafik. Do oceny: wygląd dzików, różnorodność mapy, druid i krąg, ludzie z osiedla przy błędach oraz automatyczne pory roku i dnia.</footer>
+</div>
+
+<script src="../../web/engine.js"></script>
+<script src="../../web/forest-map.js"></script>
+<script src="../../web/forest-life.js"></script>
+<script>
+  AW.boot();
+  FOREST_LIFE.applyControls();
+  for (const id of ['season', 'daytime']) document.getElementById(id).addEventListener('change', () => FOREST_LIFE.applyControls());
+</script>

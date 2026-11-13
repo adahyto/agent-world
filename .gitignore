@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.agent-world/
+events.jsonl
+state.json
+tokens.json
+accounts.json

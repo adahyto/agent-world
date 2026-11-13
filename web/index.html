@@ -1,0 +1,437 @@
+<meta charset="utf-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 shape-rendering=%27crispEdges%27%3E%3Crect width=%2716%27 height=%2716%27 fill=%27%231c3a22%27/%3E%3Crect x=%272%27 y=%275%27 width=%2710%27 height=%276%27 fill=%27%236b4e3a%27/%3E%3Crect x=%279%27 y=%273%27 width=%275%27 height=%277%27 fill=%27%236b4e3a%27/%3E%3Crect x=%2710%27 y=%272%27 width=%271%27 height=%271%27 fill=%27%236b4e3a%27/%3E%3Crect x=%2712%27 y=%272%27 width=%271%27 height=%271%27 fill=%27%236b4e3a%27/%3E%3Crect x=%2713%27 y=%277%27 width=%272%27 height=%272%27 fill=%27%23c89080%27/%3E%3Crect x=%2711%27 y=%275%27 width=%271%27 height=%271%27 fill=%27%23fff%27/%3E%3Crect x=%273%27 y=%2711%27 width=%272%27 height=%273%27 fill=%27%233a2a1e%27/%3E%3Crect x=%279%27 y=%2711%27 width=%272%27 height=%273%27 fill=%27%233a2a1e%27/%3E%3Crect x=%2712%27 y=%279%27 width=%271%27 height=%272%27 fill=%27%23f2eadb%27/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent World</title>
+<script>try { const t = localStorage.getItem('aw-theme'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (_) { /* brak localStorage */ }</script>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  /* Układ: pasek u góry (tytuł, stan, narzędzia), mapa jako bohater, pod nią karty sesji, oś czasu, legenda. Panel sesji z prawej (pulpit) albo jako arkusz od dołu (telefon).
+     Paleta idzie za mapą: pergamin i mech w dzień, ciemny las w nocy. */
+  :root {
+    --bg: #ece7da; --surface: #fbf9f3; --surface-2: #f3efe4; --fg: #1d2219; --muted: #66705f; --line: #d8d1bf; --line-2: #e6e0d0;
+    --accent: #3b7a46; --accent-ink: #ffffff; --frame: #0b0e0b;
+    --st-idle: #3a9256; --st-think: #87901a; --st-tool: #c47a12; --st-perm: #d2342c; --st-q: #b08500; --st-in: #2a8a6c; --st-done: #8d9087; --st-err: #a02a6e;
+    --display: "Pixelify Sans", ui-monospace, "Courier New", monospace;
+    --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --r: 10px; --r-s: 6px;
+    --chev: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 12 12%27%3E%3Cpath d=%27M2.5 4.5 6 8l3.5-3.5%27 fill=%27none%27 stroke=%27%2366705f%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E");
+    --shadow: 0 1px 2px rgba(20, 30, 15, .06), 0 8px 24px -12px rgba(20, 30, 15, .25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b100d; --surface: #141b16; --surface-2: #1a2221; --fg: #e6e9df; --muted: #8e9a8b; --line: #273129; --line-2: #1f2822;
+      --accent: #8fd08c; --accent-ink: #0b100d; --frame: #050806;
+      --st-idle: #6fd38c; --st-think: #d2dc6a; --st-tool: #ffb648; --st-perm: #ff5a52; --st-q: #ffd23f; --st-in: #6fe0b5; --st-done: #8a918a; --st-err: #e070b0;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px -14px rgba(0, 0, 0, .7);
+      --chev: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 12 12%27%3E%3Cpath d=%27M2.5 4.5 6 8l3.5-3.5%27 fill=%27none%27 stroke=%27%238e9a8b%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E");
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b100d; --surface: #141b16; --surface-2: #1a2221; --fg: #e6e9df; --muted: #8e9a8b; --line: #273129; --line-2: #1f2822;
+    --accent: #8fd08c; --accent-ink: #0b100d; --frame: #050806;
+    --st-idle: #6fd38c; --st-think: #d2dc6a; --st-tool: #ffb648; --st-perm: #ff5a52; --st-q: #ffd23f; --st-in: #6fe0b5; --st-done: #8a918a; --st-err: #e070b0;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 10px 30px -14px rgba(0, 0, 0, .7);
+    --chev: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 12 12%27%3E%3Cpath d=%27M2.5 4.5 6 8l3.5-3.5%27 fill=%27none%27 stroke=%27%238e9a8b%27 stroke-width=%271.8%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27/%3E%3C/svg%3E");
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 var(--body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 14px 16px 40px; display: grid; gap: 16px; }
+  body.has-panel .wrap { max-width: 1480px; }
+  h1, h2, h3 { margin: 0; }
+  button, select { font-family: inherit; }
+  button:focus-visible, select:focus-visible, summary:focus-visible, #stage:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+
+  /* przyciski */
+  .btn { display: inline-flex; align-items: center; gap: 7px; font: 500 13px/1 var(--mono); padding: 8px 11px; border-radius: var(--r-s); cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--fg); white-space: nowrap; }
+  .btn:hover { border-color: var(--muted); }
+  .btn[aria-pressed="true"], .btn.is-on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-s); overflow: hidden; }
+  .seg .btn { border: 0; border-radius: 0; padding: 7px 10px; }
+  .seg .btn + .btn { border-left: 1px solid var(--line); }
+  select.sel { font: 500 13px/1.2 var(--mono); padding: 7px 26px 7px 9px; border-radius: var(--r-s); border: 1px solid var(--line); color: var(--fg); cursor: pointer; appearance: none; -webkit-appearance: none; background: var(--chev) no-repeat right 8px center / 12px 12px var(--surface); min-width: 0; width: 100%; text-overflow: ellipsis; }
+  select.sel:hover { border-color: var(--muted); }
+
+  /* pasek u góry */
+  .top { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .brand h1 { font: 700 clamp(24px, 3.6vw, 32px)/1 var(--display); letter-spacing: .01em; }
+  .brand .eyebrow { font: 500 12px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .pill { font: 500 12px/1 var(--mono); letter-spacing: .02em; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); display: inline-flex; align-items: center; gap: 6px; background: var(--surface); }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  #live-badge[data-state="on"] { color: var(--st-idle); border-color: color-mix(in srgb, var(--st-idle) 45%, var(--line)); }
+  #live-badge[data-state="on"]::before { animation: blink 2.4s ease-in-out infinite; }
+  #live-badge[data-state="off"] { color: var(--st-perm); border-color: color-mix(in srgb, var(--st-perm) 45%, var(--line)); }
+  #wait-badge { color: var(--st-perm); border-color: var(--st-perm); background: color-mix(in srgb, var(--st-perm) 12%, var(--surface)); font-weight: 600; }
+  @keyframes blink { 50% { opacity: .35; } }
+  .tools { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .phone-only { display: none; }
+
+  /* ustawienia: wysuwane okienko pod przyciskiem */
+  .settings { position: relative; }
+  .settings > summary { list-style: none; }
+  .settings > summary::-webkit-details-marker { display: none; }
+  .settings[open] > summary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+  .settings .pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: min(340px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; box-shadow: var(--shadow); display: grid; gap: 12px; }
+  .pop .row { display: grid; gap: 5px; min-width: 0; }
+  .pop .row > span { font: 500 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .pop .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pop label.chk { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
+  .pop label.chk input { width: 16px; height: 16px; accent-color: var(--accent); margin: 0; }
+  .pop .hint { margin: 0; font-size: 12px; color: var(--muted); }
+  .pop kbd { font: 500 11px/1 var(--mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: 3px; padding: 2px 5px; }
+
+  /* mapa */
+  .main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+  body.has-panel .main { grid-template-columns: minmax(0, 1fr) 360px; }
+  .stage-col { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
+  .stage-frame { background: var(--frame); border-radius: var(--r); padding: 5px; box-shadow: var(--shadow), 0 0 0 1px var(--line); }
+  #stage { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; border-radius: 6px; }
+  .caption { margin: 0; min-width: 0; font-size: 13px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .caption b { font: 700 13px/1.4 var(--display); color: var(--fg); }
+  .stage-frame.zoomed { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .stage-frame.zoomed #stage { width: 1120px; max-width: none; }
+
+  /* sesje: karty pod mapą */
+  .sec-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .sec-head h2, .sec-head h3 { font: 700 17px/1.2 var(--display); }
+  .sec-head .hint { font-size: 13px; color: var(--muted); }
+  @media (max-width: 700px) { .sec-head .hint { display: none; } }
+  .sessions { display: grid; gap: 10px; }
+  #live-empty { margin: 0; padding: 18px 16px; border: 1px dashed var(--line); border-radius: var(--r); color: var(--muted); font-size: 14px; background: var(--surface-2); }
+  #live-empty code { font: 500 13px/1 var(--mono); background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 2px 6px; }
+  #chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+  #chips:empty { display: none; }
+  .chip { display: grid; gap: 5px; text-align: left; padding: 10px 12px 9px 11px; border-radius: 8px; border: 1px solid var(--line); border-left: 4px solid var(--sc, var(--line)); background: var(--surface); color: var(--fg); cursor: pointer; min-width: 0; box-shadow: var(--shadow); }
+  .chip:hover { border-color: var(--muted); border-left-color: var(--sc, var(--line)); }
+  .chip.is-sel { border-color: var(--accent); border-left-color: var(--sc, var(--line)); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 40%, transparent); }
+  .chip.is-sub { border-style: dashed; border-left-style: solid; background: var(--surface-2); }
+  .chip-top { display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .chip-top i { width: 9px; height: 9px; border-radius: 2px; background: var(--pc, var(--line)); flex: none; }
+  .chip-top b { font: 600 14px/1.2 var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .chip-top small { margin-left: auto; color: var(--muted); font: 500 11px/1.2 var(--mono); white-space: nowrap; }
+  .chip-st { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; min-width: 0; }
+  .chip-st em { font: 600 12.5px/1.3 var(--body); color: var(--sc, var(--muted)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip-st time { font: 400 11px/1.3 var(--mono); color: var(--muted); white-space: nowrap; }
+  .chip-proj { font: 400 12px/1.3 var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chip.st-w-permission, .chip.st-w-question { animation: ring 1.8s ease-in-out infinite; }
+  @keyframes ring { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--sc) 35%, transparent); } }
+  @media (prefers-reduced-motion: reduce) { .chip, #live-badge::before { animation: none !important; } }
+
+  /* symulacja: przyciski stanu dla wybranego dzika (tylko gdy włączona) */
+  #controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; background: var(--surface-2); border: 1px dashed var(--line); border-radius: var(--r); padding: 10px 12px; }
+  body:not(.sim) .sim-only { display: none !important; }
+  .who { font: 500 13px/1.3 var(--mono); color: var(--muted); }
+  .who b { color: var(--fg); font-weight: 600; }
+  .grp { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .grp > span { font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 2px; }
+  .grp .btn { padding: 6px 8px; font-size: 12px; border-left: 3px solid var(--c, var(--line)); }
+  #sel-msg { font-size: 13px; color: var(--muted); flex-basis: 100%; overflow-wrap: anywhere; }
+
+  /* panel sesji */
+  #panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; font-size: 13px; display: grid; gap: 12px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; box-shadow: var(--shadow); min-width: 0; }
+  #panel > header { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  #panel > header i { width: 10px; height: 10px; border-radius: 2px; background: var(--pc, var(--line)); flex: none; }
+  #panel > header b { font: 700 17px/1.2 var(--display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  #panel > header span { color: var(--muted); font: 500 12px/1.2 var(--mono); flex: 1; white-space: nowrap; }
+  #p-close { border: 1px solid var(--line); background: var(--surface-2); color: var(--muted); border-radius: var(--r-s); cursor: pointer; font-size: 13px; width: 30px; height: 30px; display: grid; place-items: center; flex: none; }
+  #p-close:hover { color: var(--fg); border-color: var(--muted); }
+  .p-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #p-status { font: 600 12.5px/1.3 var(--mono); padding: 4px 9px; border-radius: 999px; color: var(--sc, var(--fg)); background: color-mix(in srgb, var(--sc, var(--line)) 14%, var(--surface)); border: 1px solid color-mix(in srgb, var(--sc, var(--line)) 40%, transparent); }
+  #p-since { color: var(--muted); font: 400 12px/1.2 var(--mono); }
+  .p-meta { color: var(--muted); font: 400 12px/1.5 var(--mono); overflow-wrap: anywhere; }
+  .p-meta + .p-meta { margin-top: -8px; }
+  #panel section { border-top: 1px solid var(--line-2); padding-top: 10px; min-width: 0; }
+  #panel section h4 { font: 500 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 6px; }
+  #panel section p { margin: 0; overflow-wrap: anywhere; max-height: 7.5em; overflow: auto; line-height: 1.45; }
+  #p-prompt { font-weight: 500; }
+  .p-tr-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+  .p-tr-bar small { color: var(--muted); }
+  #p-transcript { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 50vh; overflow: auto; font-size: 12px; line-height: 1.4; }
+  #p-transcript:empty { display: none; }
+  #p-transcript li { padding: 5px 8px; border-radius: var(--r-s); border-left: 3px solid var(--line); background: var(--surface-2); overflow-wrap: anywhere; white-space: pre-wrap; min-width: 0; }
+  #p-transcript li time { display: block; font: 400 10px/1.2 var(--mono); color: var(--muted); margin-bottom: 2px; }
+  #p-transcript .tr-user { border-left-color: var(--accent); }
+  #p-transcript .tr-assistant { border-left-color: var(--st-idle); }
+  #p-transcript .tr-tool { border-left-color: var(--st-tool); font-family: var(--mono); }
+  #p-transcript .tr-result, #p-transcript .tr-thinking { color: var(--muted); font-family: var(--mono); font-size: 11px; padding-block: 2px; }
+  #p-transcript .tr-result.err { color: var(--st-err); }
+  #p-events { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; max-height: 40vh; overflow: auto; font: 400 12px/1.45 var(--mono); }
+  #p-events li { display: grid; grid-template-columns: auto 1.2em minmax(0, 1fr); gap: 6px; align-items: baseline; border-bottom: 1px solid var(--line-2); padding: 4px 0; min-width: 0; }
+  #p-events li span { min-width: 0; overflow-wrap: anywhere; }
+  #p-events time { color: var(--muted); font-size: 11px; }
+  #p-events i { font-style: normal; text-align: center; color: var(--muted); }
+  #p-events .ev-PermissionRequest i, #p-events .ev-PermissionRequest span { color: var(--st-perm); font-weight: 600; }
+  #p-events .ev-PostToolUseFailure i, #p-events .ev-StopFailure i { color: var(--st-err); }
+  #p-events .ev-UserPromptSubmit span { color: var(--fg); font-weight: 500; }
+  #p-events .ev-PostToolUse i { color: var(--st-idle); }
+  #p-events .empty { color: var(--muted); grid-template-columns: 1fr; }
+
+  /* oś czasu */
+  #timeline { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px 8px; display: grid; gap: 8px; box-shadow: var(--shadow); }
+  body.sim .live-only { display: none !important; }
+  .tl-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+  .tl-legend { font: 500 11px/1.6 var(--mono); color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; margin-left: auto; }
+  .tl-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; background: var(--sc, var(--line)); }
+  .tl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  #timeline svg { width: 100%; min-width: 800px; display: block; font-family: var(--mono); }
+  .tl-grid { stroke: var(--line); stroke-width: 1; }
+  .tl-tick { font-size: 10px; fill: var(--muted); text-anchor: middle; }
+  .tl-now { text-anchor: end; }
+  .tl-name { font-size: 11px; fill: var(--fg); text-anchor: end; }
+  .tl-seg { fill: var(--sc, var(--line)); }
+  .tl-seg:hover { stroke: var(--fg); stroke-width: 1; }
+  .tl-seg.st-done { opacity: .5; }
+  #tl-tip { position: absolute; pointer-events: none; background: var(--fg); color: var(--bg); font: 500 12px/1.3 var(--mono); padding: 5px 8px; border-radius: var(--r-s); max-width: 320px; z-index: 4; }
+
+  /* kolory statusów */
+  .st-idle { --sc: var(--st-idle); } .st-thinking { --sc: var(--st-think); } .st-tool { --sc: var(--st-tool); }
+  .st-w-permission { --sc: var(--st-perm); } .st-w-question { --sc: var(--st-q); } .st-w-input { --sc: var(--st-in); }
+  .st-done { --sc: var(--st-done); } .st-error { --sc: var(--st-err); }
+
+  /* legenda */
+  .legend-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 0 16px; box-shadow: var(--shadow); }
+  .legend-box summary { cursor: pointer; font: 700 17px/1.3 var(--display); padding: 12px 0; list-style: none; display: flex; align-items: center; gap: 8px; }
+  .legend-box summary::before { content: "▸"; color: var(--muted); font-size: 14px; }
+  .legend-box[open] summary::before { content: "▾"; }
+  .legend-box summary::-webkit-details-marker { display: none; }
+  .legend-box[open] summary { border-bottom: 1px solid var(--line-2); }
+  #legend { display: grid; gap: 14px; padding: 14px 0 16px; }
+  .lead { margin: 0; max-width: 76ch; }
+  .lead.intro { padding-top: 14px; margin-bottom: -4px; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px 28px; }
+  .cols section { min-width: 0; }
+  #legend h3 { font: 700 15px/1.2 var(--display); margin: 6px 0 8px; letter-spacing: .02em; }
+  #legend table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  #legend th { text-align: left; vertical-align: top; font: 500 12px/1.5 var(--mono); color: var(--muted); padding: 6px 12px 6px 0; white-space: nowrap; width: 1%; border-bottom: 1px solid var(--line-2); }
+  #legend td { padding: 5px 0; border-bottom: 1px solid var(--line-2); }
+  .pc { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+  .pc li { padding-left: 22px; position: relative; }
+  .pc li::before { position: absolute; left: 0; top: 0; font: 700 14px/1.5 var(--mono); }
+  .pc .pro::before { content: "+"; color: var(--st-idle); }
+  .pc .con::before { content: "−"; color: var(--st-perm); }
+  #tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+  #tabs button { font: 500 15px/1 var(--display); padding: 9px 14px; border-radius: var(--r-s); cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+  #tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+
+  footer { color: var(--muted); font-size: 13px; max-width: 80ch; padding-inline: 2px; }
+  footer kbd, footer code { font: 500 12px/1 var(--mono); background: var(--surface); border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; }
+
+  /* telefon */
+  @media (max-width: 900px) {
+    body.has-panel .main { grid-template-columns: minmax(0, 1fr); }
+    #panel { position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 25; border-radius: 14px 14px 0 0; max-height: 62vh; box-shadow: 0 -8px 30px rgba(0,0,0,.3); padding-top: 22px; }
+    #panel::before { content: ""; position: absolute; top: 8px; left: 50%; width: 40px; height: 4px; border-radius: 2px; background: var(--line); transform: translateX(-50%); }
+    body.has-panel .wrap { padding-bottom: 64vh; }
+  }
+  @media (max-width: 700px) {
+    .wrap { padding: 10px 12px 32px; gap: 12px; }
+    .phone-only { display: inline-flex; }
+    .brand { gap: 8px; }
+    .brand .eyebrow { display: none; }
+    .tools .btn span.lbl { display: none; }
+    #chips { grid-template-columns: 1fr; }
+    .caption span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+    .caption { flex-wrap: nowrap; align-items: baseline; }
+    .tl-legend { margin-left: 0; }
+  }
+
+  /* TV: sama mapa na całym ekranie, podpisy większe, kursor znika */
+  body.tv { background: #05070c; overflow: hidden; }
+  body.tv .wrap { max-width: none; padding: 0; margin: 0; display: block; }
+  body.tv .wrap > :not(.main), body.tv #panel, body.tv .stage-col > :not(.stage-frame) { display: none !important; }
+  body.tv .main { display: block; }
+  body.tv .stage-frame { position: fixed; inset: 0; padding: 0; border-radius: 0; box-shadow: none; display: grid; place-items: center; background: #05070c; }
+  body.tv #stage { width: min(100vw, calc(100vh * 16 / 9)); height: auto; border-radius: 0; }
+  body.tv.idle { cursor: none; }
+  #tv-exit { position: fixed; top: 12px; right: 12px; z-index: 9; display: none; font: 500 13px/1 var(--mono); padding: 8px 12px; border-radius: var(--r-s); border: 1px solid rgba(255,255,255,.3); background: rgba(0,0,0,.5); color: #fff; cursor: pointer; }
+  body.tv:not(.idle) #tv-exit { display: block; }
+  /* podłączanie komputerów (okno dialogowe) */
+  #connect { width: min(640px, calc(100vw - 24px)); max-height: calc(100vh - 24px); padding: 0; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); color: var(--fg); box-shadow: var(--shadow); }
+  #connect::backdrop { background: rgb(0 0 0 / .45); }
+  #connect .c-in { padding: 18px 20px 20px; display: grid; gap: 14px; }
+  #connect header { display: flex; align-items: center; gap: 10px; }
+  #connect h2 { font: 700 22px/1.2 var(--display); flex: 1; }
+  #connect h3 { font: 500 11px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 8px; }
+  #connect p { margin: 0; }
+  #connect .muted { color: var(--muted); font-size: 13px; }
+  #connect form { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface-2); }
+  #connect label.f { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+  #connect input[type=text] { font: 500 14px/1.3 var(--body); padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--surface); color: var(--fg); }
+  #connect fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+  #connect legend { font-size: 13px; color: var(--muted); margin-bottom: 4px; padding: 0; }
+  #connect .opt { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-s); background: var(--surface); cursor: pointer; }
+  #connect .opt:has(input:checked) { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+  #connect .opt input { margin: 3px 0 0; accent-color: var(--accent); }
+  #connect .opt b { font-weight: 600; }
+  #connect .opt small { grid-column: 2; color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+  #connect .btn.pri { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); justify-self: start; font-weight: 600; }
+  #connect .cmd { display: grid; gap: 8px; padding: 14px; border: 1px solid var(--accent); border-radius: var(--r); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+  #connect pre { margin: 0; padding: 10px 12px; font: 500 12.5px/1.5 var(--mono); background: var(--frame); color: #e6e9df; border-radius: var(--r-s); white-space: pre-wrap; overflow-wrap: anywhere; user-select: all; }
+  #connect .row2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  #connect ul.tok { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  #connect ul.tok li { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line-2); border-radius: var(--r-s); font-size: 13px; }
+  #connect ul.tok li div { flex: 1; min-width: 0; }
+  #connect ul.tok b { display: block; }
+  #connect ul.tok small { color: var(--muted); }
+  #connect code { font: 500 12px/1.4 var(--mono); overflow-wrap: anywhere; }
+  #connect .err { color: var(--st-perm); font-size: 13px; }
+  #live-empty .btn { margin-left: 4px; vertical-align: baseline; }
+  #live-badge[data-state="demo"] { color: var(--st-q); border-color: color-mix(in srgb, var(--st-q) 50%, var(--line)); }
+  #demo-note { margin: 0 0 10px; padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--st-q) 50%, var(--line)); border-radius: var(--r); background: color-mix(in srgb, var(--st-q) 10%, var(--surface)); font-size: 14px; line-height: 1.5; }
+  #demo-note .btn { margin-left: 4px; vertical-align: baseline; }
+  body.demo #timeline, body.demo #p-tr-sec { display: none !important; }
+  body.tv #demo-note { display: none; }
+  #acct-badge { color: var(--st-q); border-color: color-mix(in srgb, var(--st-q) 45%, var(--line)); }
+  #connect .acct-note { padding: 10px 12px; border-radius: var(--r-s); border: 1px solid color-mix(in srgb, var(--st-q) 50%, var(--line)); background: color-mix(in srgb, var(--st-q) 10%, var(--surface)); font-size: 13.5px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>Agent World</h1><span class="eyebrow">watacha dzików</span></div>
+    <div class="status"><span id="live-badge" class="pill" data-state="off">łączę…</span><span id="wait-badge" class="pill" hidden></span><span id="acct-badge" class="pill" hidden title="Konto gościa działa 24 godziny od pierwszego wejścia. Potem tokeny, sesje i historia są usuwane automatycznie."></span></div>
+    <div class="tools">
+      <button type="button" id="zoom-btn" class="btn phone-only" title="Większa mapa, przewijana poziomo"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5 14 14M7 5v4M5 7h4"/></svg> <span class="lbl">powiększ</span></button>
+      <button type="button" id="connect-btn" class="btn live-only" title="Podłącz Claude Code z laptopa albo serwera"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 10 10 6M4.5 8.5 3 10a2.5 2.5 0 0 0 3.5 3.5L8 12M8 4l1.5-1.5A2.5 2.5 0 0 1 13 6l-1.5 1.5"/></svg> <span class="lbl">podłącz komputer</span></button>
+      <button type="button" id="tv-btn" class="btn" title="Sama mapa na cały ekran (klawisz f)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/></svg> <span class="lbl">pełny ekran</span></button>
+      <details class="settings" id="settings">
+        <summary class="btn" aria-label="Ustawienia"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 4h12M2 8h12M2 12h12"/><circle cx="6" cy="4" r="1.6" fill="var(--surface)"/><circle cx="11" cy="8" r="1.6" fill="var(--surface)"/><circle cx="5" cy="12" r="1.6" fill="var(--surface)"/></svg> <span class="lbl">ustawienia</span></summary>
+        <div class="pop">
+          <div class="pair">
+            <label class="row"><span>Pora roku</span><select id="season" class="sel"><option value="auto">auto</option><option value="wiosna">wiosna</option><option value="lato">lato</option><option value="jesien">jesień</option><option value="zima">zima</option></select></label>
+            <label class="row"><span>Pora dnia</span><select id="daytime" class="sel"><option value="auto">auto</option><option value="dzien">dzień</option><option value="noc">noc</option></select></label>
+          </div>
+          <div class="row"><span>Wygląd strony</span>
+            <div class="seg" id="theme-seg" role="group" aria-label="Motyw"><button type="button" class="btn" data-theme-set="auto">auto</button><button type="button" class="btn" data-theme-set="light">jasny</button><button type="button" class="btn" data-theme-set="dark">ciemny</button></div></div>
+          <div class="row"><span>Mapa</span>
+            <label class="chk"><input type="checkbox" id="labels" checked> podpisy narzędzi przy dzikach</label>
+            <label class="chk"><input type="checkbox" id="auto" checked> symulacja (udawane sesje zamiast prawdziwych)</label></div>
+          <p class="hint">Klawisz <kbd>f</kbd> albo adres <code>?tv</code> dają samą mapę na cały ekran.</p>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <nav id="tabs" role="tablist" aria-label="Koncepcje"></nav>
+
+  <div class="main">
+    <div class="stage-col">
+      <p id="demo-note" hidden><b>Pokaz.</b> To udawane dziki, żeby było widać, jak to działa: żadna Twoja sesja Claude Code jeszcze tu nie dotarła. <button type="button" class="btn" data-open-connect>podłącz Claude Code</button> — wtedy zamiast nich wyjdą z lasu Twoje sesje.</p>
+      <div class="stage-frame"><canvas id="stage" width="640" height="360" aria-label="Animowana mapa świata agentów"></canvas></div>
+      <p class="caption"><b id="concept-name"></b><span id="concept-tag"></span></p>
+
+      <section class="sessions" aria-label="Sesje">
+        <div class="sec-head"><h2>Sesje</h2><span class="hint">Kliknij dzika albo kartę, żeby zobaczyć szczegóły i transkrypt.</span></div>
+        <p id="live-empty" hidden>Na polanie pusto: żadna Twoja sesja Claude Code teraz nie działa. Uruchom <code>claude</code> na podłączonym komputerze, a dzik wyjdzie z lasu. <span id="empty-connect">Nie masz jeszcze podłączonego komputera? <button type="button" class="btn" data-open-connect>podłącz Claude Code</button></span></p>
+        <div id="chips" aria-label="Agenci"></div>
+        <div id="controls" class="sim-only">
+          <div class="who">Wybrany: <b id="sel-name">—</b></div>
+          <div class="grp"><span>Stan</span>
+            <button type="button" class="btn" data-status="idle" style="--c: var(--st-idle)">idle</button>
+            <button type="button" class="btn" data-status="thinking" style="--c: var(--st-think)">thinking</button>
+          </div>
+          <div class="grp"><span>Narzędzie</span>
+            <button type="button" class="btn" data-status="tool" data-tool="Bash" style="--c: var(--st-tool)">Bash</button>
+            <button type="button" class="btn" data-status="tool" data-tool="Read" style="--c: var(--st-tool)">Read</button>
+            <button type="button" class="btn" data-status="tool" data-tool="Grep" style="--c: var(--st-tool)">Grep</button>
+            <button type="button" class="btn" data-status="tool" data-tool="Edit" style="--c: var(--st-tool)">Edit</button>
+            <button type="button" class="btn" data-status="tool" data-tool="Write" style="--c: var(--st-tool)">Write</button>
+            <button type="button" class="btn" data-status="tool" data-tool="WebSearch" style="--c: var(--st-tool)">WebSearch</button>
+            <button type="button" class="btn" data-status="tool" data-tool="WebFetch" style="--c: var(--st-tool)">WebFetch</button>
+            <button type="button" class="btn" data-status="tool" data-tool="TodoWrite" style="--c: var(--st-tool)">TodoWrite</button>
+            <button type="button" class="btn" data-status="tool" data-tool="MCP" style="--c: var(--st-tool)">MCP</button>
+            <button type="button" class="btn" data-status="tool" data-tool="Agent" style="--c: var(--st-tool)">Agent</button>
+          </div>
+          <div class="grp"><span>Czeka</span>
+            <button type="button" class="btn" data-status="waiting_for_user" data-wait="permission" style="--c: var(--st-perm)">pozwolenie</button>
+            <button type="button" class="btn" data-status="waiting_for_user" data-wait="question" style="--c: var(--st-q)">pytanie</button>
+            <button type="button" class="btn" data-status="waiting_for_user" data-wait="input" style="--c: var(--st-in)">bezczynność</button>
+          </div>
+          <div class="grp"><span>Koniec</span>
+            <button type="button" class="btn" data-status="done" style="--c: var(--st-done)">done</button>
+            <button type="button" class="btn" data-status="error" style="--c: var(--st-err)">error</button>
+          </div>
+          <div id="sel-msg"></div>
+        </div>
+      </section>
+    </div>
+
+    <aside id="panel" hidden aria-label="Szczegóły sesji">
+      <header><i id="p-color"></i><b id="p-name"></b><span id="p-model"></span><button type="button" id="p-close" aria-label="Zamknij panel">✕</button></header>
+      <div class="p-row"><span id="p-status"></span><small id="p-since"></small></div>
+      <div class="p-meta" id="p-project"></div>
+      <div class="p-meta" id="p-started"></div>
+      <section><h4>Ostatnie polecenie</h4><p id="p-prompt"></p></section>
+      <section><h4>Ostatnia wiadomość</h4><p id="p-msg"></p></section>
+      <section><h4>Zdarzenia</h4><ol id="p-events"></ol></section>
+      <section class="live-only" id="p-tr-sec"><h4>Transkrypt</h4>
+        <div class="p-tr-bar"><button type="button" class="btn" id="p-tr-load">pokaż ostatnie 30 wpisów</button><button type="button" class="btn" id="p-tr-more" hidden>wcześniejsze</button><small id="p-tr-info"></small></div>
+        <ol id="p-transcript"></ol>
+      </section>
+    </aside>
+  </div>
+
+  <dialog id="connect" aria-labelledby="c-title">
+    <div class="c-in">
+      <header><h2 id="c-title">Podłącz swoje Claude Code</h2><button type="button" class="btn" id="c-close" aria-label="Zamknij">✕</button></header>
+      <p class="acct-note" id="c-acct" hidden></p>
+      <p>Sesje Claude Code z laptopa albo serwera pojawią się na tej mapie jako dziki. Wystarczy jedna linia w terminalu tego komputera (macOS, Linux, Windows przez WSL).</p>
+      <form id="c-form">
+        <label class="f">Nazwa komputera (widzisz ją tylko Ty)<input type="text" id="c-label" maxlength="40" value="laptop" autocomplete="off" required></label>
+        <fieldset><legend>Co hook wysyła z tego komputera</legend>
+          <label class="opt"><input type="radio" name="mode" value="status" checked><b>Tylko statusy</b><small>Stan sesji, nazwy narzędzi (np. Bash, Edit), prośby o zgodę i nazwa folderu projektu. Bez treści promptów, odpowiedzi, komend i plików. Panel pokaże stan, bez ostatniego polecenia i wiadomości.</small></label>
+          <label class="opt"><input type="radio" name="mode" value="full"><b>Pełne dane</b><small>To co wyżej oraz ostatni prompt (do 300 znaków), początek ostatniej odpowiedzi (do 200 znaków) i skrót narzędzia: początek komendy albo sama nazwa pliku. Bez zawartości plików i wyników narzędzi.</small></label>
+          <small class="muted">Przycinanie robi hook na Twoim komputerze (python3 albo jq). Bez nich zdarzenie idzie w całości, a serwer od razu odrzuca to, czego tryb nie obejmuje, i niczego z tego nie zapisuje.</small>
+        </fieldset>
+        <button type="submit" class="btn pri">Utwórz polecenie</button>
+        <p class="err" id="c-err" hidden></p>
+      </form>
+      <div class="cmd" id="c-cmd" hidden>
+        <h3>Wklej w terminalu tego komputera</h3>
+        <pre id="c-line"></pre>
+        <div class="row2"><button type="button" class="btn" id="c-copy">kopiuj</button><span class="muted" id="c-copied"></span></div>
+        <p class="muted">Token jest w poleceniu i widać go tylko teraz. Skrypt sprawdzi go, zapisze hook w <code>~/.agent-world-remote/</code> i dopisze go do <code>~/.claude/settings.json</code> (inne hooki zostają, kopia pliku obok). Potem uruchom <code>claude</code> jak zwykle; działające sesje uruchom ponownie.</p>
+      </div>
+      <section>
+        <h3>Twoje komputery</h3>
+        <ul class="tok" id="c-list"></ul>
+        <p class="muted" id="c-none">Nie masz jeszcze żadnego.</p>
+      </section>
+      <p class="muted">Odłączenie: <code id="c-unline"></code>, potem „unieważnij” przy komputerze. Zdarzenia i oś czasu znikają po 24 godzinach, sesje z mapy po 10 minutach od końca, a konto gościa razem z tokenami znika 24 godziny po pierwszym wejściu.</p>
+      <p class="row2 muted"><a href="https://doner.cloud/prywatnosc/#dziki">Prywatność: co i jak długo przechowujemy</a><button type="button" class="btn" id="c-wipe">usuń wszystkie moje dane</button><span id="c-wiped"></span></p>
+    </div>
+  </dialog>
+
+  <button type="button" id="tv-exit">✕ wyjdź z pełnego ekranu (Esc)</button>
+
+  <section id="timeline" class="live-only" aria-label="Oś czasu sesji">
+    <div class="tl-head"><div class="sec-head"><h3>Oś czasu</h3></div><div class="seg" role="group" aria-label="Okno"><button type="button" class="btn" data-hours="6" aria-pressed="true">6 h</button><button type="button" class="btn" data-hours="12" aria-pressed="false">12 h</button><button type="button" class="btn" data-hours="24" aria-pressed="false">24 h</button></div>
+      <div class="tl-legend"><i class="st-idle"></i>czeka na polecenie <i class="st-thinking"></i>myśli <i class="st-tool"></i>pracuje <i class="st-w-permission"></i>pozwolenie <i class="st-w-question"></i>pytanie <i class="st-w-input"></i>bezczynna <i class="st-error"></i>błąd <i class="st-done"></i>zakończona</div></div>
+    <div class="tl-scroll"><svg viewBox="0 0 1000 40" role="img" aria-label="Statusy sesji w czasie"></svg></div>
+    <div id="tl-tip" hidden></div>
+  </section>
+
+  <details class="legend-box" id="legend-box"><summary>Jak czytać mapę</summary><p class="lead intro">Każda Twoja sesja Claude Code to dzik z watahy. Barłóg w lesie to projekt, miejsca na polanie i za drogą to narzędzia, a pod bramą bazy dzik czeka na Twoją zgodę.</p><div id="legend"></div></details>
+
+  <footer>Dane pochodzą z hooków Claude Code z podłączonych komputerów (przycisk „podłącz komputer”). Każdy zalogowany widzi tylko swoje sesje<span id="me-line"></span>. Sesje zakończone znikają z mapy po 10 minutach, oś czasu pamięta 24 godziny. Pora roku i dnia na mapie idą za zegarem serwera. <a href="https://doner.cloud/prywatnosc/#dziki">Prywatność</a>.</footer>
+</div>
+
+<script src="engine.js"></script>
+<script src="forest-map.js"></script>
+<script src="forest-life.js"></script>
+<script src="ui.js"></script>
+<script src="timeline.js"></script>
+<script src="panel.js"></script>
+<script src="live.js"></script>
+<script src="connect.js"></script>
+<script>
+  AW.boot();
+  FOREST_LIFE.applyControls();
+  document.getElementById('auto').addEventListener('change', (e) => document.body.classList.toggle('sim', e.target.checked));
+  for (const id of ['season', 'daytime']) document.getElementById(id).addEventListener('change', () => FOREST_LIFE.applyControls());
+</script>
